@@ -8,7 +8,7 @@ import {
   renderAutoReply,
 } from "@/lib/server/mail";
 
-export const runtime = "nodejs";
+export const runtime = 'edge';
 
 const copy = {
   pt: {
