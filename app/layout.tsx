@@ -1,24 +1,49 @@
 import type { Metadata } from "next";
+import { ascBrand } from "@/lib/data/branding";
 import "./globals.css";
 
+const siteTitle = "ASC Axiom Tech | Consultoria em Desenvolvimento Tecnológico, IA, SaaS e Web3";
+const siteDescription =
+  "Empresa de consultoria em desenvolvimento tecnológico. Criamos sistemas robustos, soluções sob medida e produtos de IA, SaaS e Web3 com tecnologias de ponta.";
+
 export const metadata: Metadata = {
-  title: { default: "ASC Axiom Tech — A Base Sólida da Sua Performance Digital", template: "%s | ASC Axiom Tech" },
-  description: "Desenvolvemos plataformas de tecnologia que transformam negócios africanos. Hubscuvala, AutomateAO e NzonChain — AI, automação e blockchain para África.",
-  keywords: ["ASC Axiom Tech", "Hubscuvala", "AutomateAO", "NzonChain", "tecnologia Angola", "AI Africa", "SaaS Angola"],
+  metadataBase: new URL("https://www.ascaxiomtech.com"),
+  title: { default: siteTitle, template: "%s | ASC Axiom Tech" },
+  description: siteDescription,
+  applicationName: "ASC Axiom Tech",
+  keywords: [
+    "ASC Axiom Tech",
+    "consultoria em desenvolvimento tecnológico",
+    "desenvolvimento de software sob medida",
+    "sistemas robustos",
+    "produtos de IA",
+    "SaaS",
+    "Web3",
+    "tecnologia Angola",
+    "consultoria tecnológica África",
+  ],
   authors: [{ name: "Simão Mbulo" }],
   creator: "ASC Axiom Tech",
   openGraph: {
-    title: "ASC Axiom Tech",
-    description: "A base sólida da sua performance digital.",
-    url: "https://ascaxiomtech.com",
+    title: siteTitle,
+    description: siteDescription,
+    url: "https://www.ascaxiomtech.com",
     siteName: "ASC Axiom Tech",
     locale: "pt_PT",
     type: "website",
-    /* [LOGO] og:image → coloca URL da imagem OG (1200×630px) */
+    images: [{ url: ascBrand.logo, alt: "ASC Axiom Tech" }],
   },
-  twitter: { card: "summary_large_image", title: "ASC Axiom Tech", description: "A base sólida da sua performance digital." },
-  /* [FAVICON] → substitui pelo teu favicon real em /public/ */
-  icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [ascBrand.logo],
+  },
+  alternates: { canonical: "https://www.ascaxiomtech.com" },
+  icons: {
+    icon: [{ url: ascBrand.icon, type: "image/svg+xml" }],
+    shortcut: [ascBrand.icon],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,6 @@
-/* [IMAGENS] Substitua as URLs abaixo pelas suas imagens reais da marca e dos produtos. */
 export const ascBrand = {
-  icon: "/asc-icon.png",
-  logo: "/asc-logo.png",
+  icon: "/axiom-tech-logo.svg",
+  logo: "/axiom-tech-horizontal.svg",
 };
 
 export const productBranding: Record<string, { logo: string }> = {

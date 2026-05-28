@@ -1,6 +1,7 @@
 "use client";
 import { useLang } from "@/lib/hooks/useLang";
 import { translations } from "@/lib/data/translations";
+import { ascBrand } from "@/lib/data/branding";
 
 export default function Footer() {
   const { lang } = useLang();
@@ -12,7 +13,7 @@ export default function Footer() {
       <div className="container">
         <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "clamp(24px,4vw,48px)", marginBottom: "clamp(40px,6vw,56px)" }}>
           <div>
-            <div style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: "var(--t-lg)", marginBottom: 16 }}>ASC Axiom Tech</div>
+            <img src={ascBrand.icon} alt="ASC Axiom Tech" className="brand-logo brand-logo--footer" />
             <p style={{ fontSize: "var(--t-xs)", color: "var(--muted)", lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>{f.tagline}</p>
             <div style={{ display: "flex", gap: 10 }}>
               {[

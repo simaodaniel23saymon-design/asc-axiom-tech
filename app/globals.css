@@ -98,7 +98,7 @@ p,li,span,a,button,input,textarea,select{font-family:var(--font-b)}
 
 .brand-logo{display:block;height:auto;object-fit:contain}
 .brand-logo--nav{height:34px;width:auto;max-width:min(42vw,260px)}
-.brand-logo--footer{height:30px;width:auto;max-width:210px}
+.brand-logo--footer{height:64px;width:auto;max-width:64px;margin-bottom:16px}
 .brand-logo--product{height:auto;width:auto;max-width:min(100%,260px);max-height:56px}
 .brand-logo--visual{height:auto;width:min(72%,260px);max-height:84px;opacity:.94;filter:drop-shadow(0 10px 32px rgba(7,9,15,.35))}
 
