@@ -90,13 +90,13 @@ export function Hero() {
         <p className="reveal d2" style={{ fontSize: "var(--t-md)", color: "var(--muted)", lineHeight: 1.75, maxWidth: 580, marginBottom: "clamp(28px,4vw,40px)" }}>{h.sub}</p>
 
         {/* CTAs */}
-        <div className="reveal d3" style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: "clamp(40px,6vw,64px)" }}>
+        <div className="reveal d3 hero-actions" style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: "clamp(40px,6vw,64px)" }}>
           <a href="#produtos" className="btn-primary"><i className="fa-solid fa-rocket" />{h.cta1}</a>
           <a href="#contacto" className="btn-ghost"><i className="fa-solid fa-comment" />{h.cta2}</a>
         </div>
 
         {/* Stats */}
-        <div className="reveal d4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "clamp(10px,1.5vw,16px)", maxWidth: 680 }}>
+        <div className="reveal d4 hero-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "clamp(10px,1.5vw,16px)", maxWidth: 680 }}>
           {[
             { n: h.stat1n, l: h.stat1l, c: "var(--cyan)" },
             { n: h.stat2n, l: h.stat2l, c: "var(--purple-l)" },
@@ -110,7 +110,15 @@ export function Hero() {
           ))}
         </div>
       </div>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @media(max-width:580px){h1{font-size:clamp(32px,8vw,48px)!important}}`}</style>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        @media(max-width:680px){.hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+        @media(max-width:580px){
+          h1{font-size:clamp(32px,8vw,48px)!important}
+          .hero-actions{flex-direction:column!important}
+          .hero-actions>a{width:100%;justify-content:center}
+        }
+      `}</style>
     </section>
   );
 }
@@ -133,9 +141,9 @@ export function Products() {
     NzonChain:  "fa-link",
   };
   const productLogos: Record<string, string> = {
-    Hubscuvala: "/hubscuvala%20logo.png",
-    AutomateAO: "/automateAO%20logo.png",
-    NzonChain: "/nzochain%20logo.png",
+    Hubscuvala: "/hubscuvala-logo.png",
+    AutomateAO: "/automateao-logo.png",
+    NzonChain: "/nzochain-logo.png",
   };
   const productLinks: Record<string, { href?: string; display: string }> = {
     Hubscuvala: { href: "https://hubscuvala.com", display: "hubscuvala.com" },
@@ -370,7 +378,7 @@ export function Investors() {
           </p>
         </div>
 
-        <div className="reveal" style={{
+        <div className="reveal investor-stats" style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "clamp(10px,1.5vw,16px)",
@@ -394,7 +402,7 @@ export function Investors() {
           ))}
         </div>
 
-        <div style={{
+        <div className="investor-grid" style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "clamp(20px,3vw,36px)",
@@ -543,13 +551,16 @@ export function Investors() {
 
       <style>{`
         @media(max-width: 720px) {
-          #investidores > div > div:last-child {
+          .investor-grid {
             grid-template-columns: 1fr !important;
           }
         }
         @media(max-width: 580px) {
-          #investidores > div > div:nth-child(2) {
-            grid-template-columns: repeat(2, 1fr) !important;
+          .investor-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+          .contact-form-row {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
@@ -613,7 +624,7 @@ export function Contact() {
           <div className="reveal d2">
             <form onSubmit={contactForm.handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <input type="hidden" name="lang" value={lang} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="contact-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <input name="name"  type="text"  placeholder={c.formName}  required disabled={contactForm.isSubmitting} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: "var(--t-sm)", padding: "12px 16px", fontFamily: "inherit", width: "100%" }} />
                 <input name="email" type="email" placeholder={c.formEmail} required disabled={contactForm.isSubmitting} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text)", fontSize: "var(--t-sm)", padding: "12px 16px", fontFamily: "inherit", width: "100%" }} />
               </div>

@@ -10,7 +10,7 @@ export default function Footer() {
   return (
     <footer style={{ background: "var(--bg2)", borderTop: "1px solid var(--border)", padding: "clamp(48px,7vw,80px) 0 clamp(24px,4vw,32px)" }}>
       <div className="container">
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "clamp(24px,4vw,48px)", marginBottom: "clamp(40px,6vw,56px)" }}>
+        <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "clamp(24px,4vw,48px)", marginBottom: "clamp(40px,6vw,56px)" }}>
           <div>
             <div style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: "var(--t-lg)", marginBottom: 16 }}>ASC Axiom Tech</div>
             <p style={{ fontSize: "var(--t-xs)", color: "var(--muted)", lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>{f.tagline}</p>
@@ -110,7 +110,10 @@ export default function Footer() {
           <span style={{ fontSize: "var(--t-xs)", color: "var(--muted)", fontStyle: "italic" }}>{f.madeIn}</span>
         </div>
       </div>
-      <style>{`@media(max-width:768px){footer .container>div:first-child{grid-template-columns:1fr 1fr!important}}`}</style>
+      <style>{`
+        @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr!important}}
+        @media(max-width:580px){.footer-grid{grid-template-columns:1fr!important}}
+      `}</style>
     </footer>
   );
 }

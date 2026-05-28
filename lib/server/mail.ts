@@ -23,6 +23,10 @@ export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+export function isMailConfigured() {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
 export function getMailConfig(kind: MailKind): { resend: Resend; config: MailConfig } {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
