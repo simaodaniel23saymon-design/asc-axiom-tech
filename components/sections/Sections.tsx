@@ -133,30 +133,30 @@ export function Products() {
   const productColors: Record<string,string> = {
     Hubscuvala: "var(--cyan)",
     AutomateAO: "var(--purple-l)",
-    NzonChain:  "var(--blue-l)",
+    NzoChain:  "var(--blue-l)",
   };
   const productIcons: Record<string,string> = {
     Hubscuvala: "fa-brain",
     AutomateAO: "fa-robot",
-    NzonChain:  "fa-link",
+    NzoChain:  "fa-link",
   };
   const productLogos: Record<string, string> = {
     Hubscuvala: "/hubscuvala-logo.png",
     AutomateAO: "/automateao-logo.png",
-    NzonChain: "/nzochain-logo.png",
+    NzoChain: "/nzochain-logo.png",
   };
   const productLinks: Record<string, { href?: string; display: string }> = {
     Hubscuvala: { href: "https://hubscuvala.com", display: "hubscuvala.com" },
     AutomateAO: { display: lang === "pt" ? "Link disponível brevemente" : lang === "es" ? "Enlace disponible pronto" : "Link available soon" },
-    NzonChain: { href: "https://nzochain.com", display: "nzochain.com" },
+    NzoChain: { href: "https://nzochain.com", display: "nzochain.com" },
   };
   const productCtas: Record<string, string | undefined> = {
-    NzonChain: p.exploreInfra,
+    NzoChain: p.exploreInfra,
   };
   const logoStyles: Record<string, { width: string; sizes: string; aspectRatio: string; translateY?: string }> = {
     Hubscuvala: { width: "min(620px, 99%)", sizes: "(max-width: 700px) 96vw, 620px", aspectRatio: "1 / 1" },
     AutomateAO: { width: "min(620px, 99%)", sizes: "(max-width: 700px) 96vw, 620px", aspectRatio: "3 / 2" },
-    NzonChain: { width: "min(660px, 100%)", sizes: "(max-width: 700px) 98vw, 660px", aspectRatio: "1600 / 896", translateY: "34px" },
+    NzoChain: { width: "min(660px, 100%)", sizes: "(max-width: 700px) 98vw, 660px", aspectRatio: "1600 / 896", translateY: "34px" },
   };
   return (
     <section id="produtos" className="section" style={{ background: "linear-gradient(180deg,transparent,rgba(37,99,235,.025),transparent)" }}>
@@ -176,7 +176,7 @@ export function Products() {
             const logo  = productLogos[item.name];
             const link  = productLinks[item.name] || { href: `https://${item.url}`, display: item.url };
             const ctaLabel = productCtas[item.name] || p.learnMore;
-            const hideVisualName = item.name === "NzonChain";
+            const hideVisualName = item.name === "NzoChain";
             const logoStyle = logoStyles[item.name] || { width: "min(620px, 99%)", sizes: "(max-width: 700px) 96vw, 620px", aspectRatio: "1 / 1" };
             const isEven = i % 2 === 0;
             return (

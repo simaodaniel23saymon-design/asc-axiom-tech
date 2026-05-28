@@ -59,7 +59,7 @@ export default function Footer() {
           <div>
             <div style={{ fontFamily: "var(--font-m)", fontSize: 10, color: "var(--muted)", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 16 }}>{f.products}</div>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
-              {[["Hubscuvala", "https://hubscuvala.com"], ["AutomateAO", "#"], ["NzonChain", "#"]].map(([name, href]) => (
+              {[["Hubscuvala", "https://hubscuvala.com"], ["AutomateAO", "#"], ["NzoChain", "#"]].map(([name, href]) => (
                 <li key={name}>
                   <a href={href} style={{ fontSize: "var(--t-xs)", color: "var(--muted)", transition: "color .2s" }}
                     onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"}

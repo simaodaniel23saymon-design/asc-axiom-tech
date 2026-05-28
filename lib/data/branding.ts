@@ -10,7 +10,7 @@ export const productBranding: Record<string, { logo: string }> = {
   AutomateAO: {
     logo: "/automateao-logo.png",
   },
-  NzonChain: {
+  NzoChain: {
     logo: "/nzochain-logo.png",
   },
 };
