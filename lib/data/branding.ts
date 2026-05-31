@@ -1,6 +1,6 @@
 export const ascBrand = {
-  icon: "/axiom-tech-logo.svg",
-  logo: "/axiom-tech-horizontal.svg",
+  icon: "/icon%20axiom.svg",
+  logo: "/Axiom%20tech%20%20horizontal.svg",
 };
 
 export const productBranding: Record<string, { logo: string }> = {

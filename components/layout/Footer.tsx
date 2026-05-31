@@ -7,6 +7,7 @@ export default function Footer() {
   const { lang } = useLang();
   const f = translations[lang].footer;
   const n = translations[lang].nav;
+  const madeIn = (f as typeof f & { madeIn?: string }).madeIn;
 
   return (
     <footer style={{ background: "var(--bg2)", borderTop: "1px solid var(--border)", padding: "clamp(48px,7vw,80px) 0 clamp(24px,4vw,32px)" }}>
@@ -108,7 +109,7 @@ export default function Footer() {
 
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: "clamp(20px,3vw,28px)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <span style={{ fontSize: "var(--t-xs)", color: "var(--muted)" }}>{f.copy}</span>
-          <span style={{ fontSize: "var(--t-xs)", color: "var(--muted)", fontStyle: "italic" }}>{f.madeIn}</span>
+          {madeIn ? <span style={{ fontSize: "var(--t-xs)", color: "var(--muted)", fontStyle: "italic" }}>{madeIn}</span> : null}
         </div>
       </div>
       <style>{`
