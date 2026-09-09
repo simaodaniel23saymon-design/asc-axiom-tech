@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-export type SiteLang = "pt" | "en" | "es";
+export type SiteLang = "pt" | "en" | "es" | "fr";
 export type MailKind = "contact" | "investors";
 
 type MailConfig = {
@@ -12,7 +12,7 @@ const DEFAULT_FROM = "hello@ascaxiomtech.com";
 const DEFAULT_TO = "hello@ascaxiomtech.com";
 
 export function normalizeLang(value: unknown): SiteLang {
-  return value === "en" || value === "es" ? value : "pt";
+  return value === "en" || value === "es" || value === "fr" ? value : "pt";
 }
 
 export function cleanText(value: unknown) {

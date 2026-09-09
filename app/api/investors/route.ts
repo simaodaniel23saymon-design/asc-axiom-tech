@@ -51,6 +51,19 @@ const copy = {
     replyBody: "Gracias por tu interés en invertir en ASC Axiom Tech. Nuestro equipo responderá en un plazo de 48 horas con los próximos pasos.",
     replyCta: "Descubrir ASC Axiom Tech",
   },
+  fr: {
+    invalid: "Données invalides. Vérifiez les champs et réessayez.",
+    failed: "Nous n’avons pas pu envoyer maintenant. Veuillez réessayer dans un instant.",
+    success: "Intérêt envoyé avec succès. Nous vous répondrons dans 48 heures.",
+    mockedSuccess: "Intérêt reçu en mode développement. Configurez Resend pour envoyer des e-mails réels.",
+    teamSubject: "Nouvel intérêt investisseur — ASC Axiom Tech",
+    teamIntro: "Vous avez reçu un nouveau lead investisseur depuis le site web.",
+    labels: { name: "Nom", email: "Email", amount: "Montant", message: "Message", lang: "Langue" },
+    replySubject: "Merci pour votre intérêt pour ASC Axiom Tech",
+    replyTitle: "Nous avons bien reçu votre intérêt",
+    replyBody: "Merci pour votre intérêt à investir dans ASC Axiom Tech. Notre équipe vous répondra dans un délai de 48 heures avec les prochaines étapes.",
+    replyCta: "Découvrir ASC Axiom Tech",
+  },
 } as const;
 
 export async function POST(request: Request) {

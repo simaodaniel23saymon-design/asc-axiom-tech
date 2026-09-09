@@ -51,6 +51,19 @@ const copy = {
     replyBody: "Recibimos tu mensaje y nuestro equipo te responderá lo antes posible.",
     replyCta: "Visitar el sitio",
   },
+  fr: {
+    invalid: "Données invalides. Vérifiez les champs et réessayez.",
+    failed: "Nous n’avons pas pu envoyer votre message maintenant. Veuillez réessayer dans un instant.",
+    success: "Message envoyé avec succès. Nous vous répondrons rapidement.",
+    mockedSuccess: "Message reçu en mode développement. Configurez Resend pour envoyer des e-mails réels.",
+    teamSubject: "Nouveau contact — ASC Axiom Tech",
+    teamIntro: "Vous avez reçu un nouveau message depuis le formulaire de contact du site.",
+    labels: { name: "Nom", email: "Email", subject: "Objet", message: "Message", lang: "Langue" },
+    replySubject: "Nous avons bien reçu votre message",
+    replyTitle: "Merci pour votre message",
+    replyBody: "Nous avons bien reçu votre message et notre équipe vous répondra dans les plus brefs délais.",
+    replyCta: "Visiter le site",
+  },
 } as const;
 
 export async function POST(request: Request) {

@@ -147,7 +147,16 @@ export function Products() {
   };
   const productLinks: Record<string, { href?: string; display: string }> = {
     Hubscuvala: { href: "https://hubscuvala.com", display: "hubscuvala.com" },
-    AutomateAO: { display: lang === "pt" ? "Link disponível brevemente" : lang === "es" ? "Enlace disponible pronto" : "Link available soon" },
+    AutomateAO: {
+      display:
+        lang === "pt"
+          ? "Link disponível brevemente"
+          : lang === "es"
+            ? "Enlace disponible pronto"
+            : lang === "fr"
+              ? "Lien disponible prochainement"
+              : "Link available soon",
+    },
     NzoChain: { href: "https://nzochain.com", display: "nzochain.com" },
   };
   const productCtas: Record<string, string | undefined> = {
