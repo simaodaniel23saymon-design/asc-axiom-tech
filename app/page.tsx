@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ascBrand } from "@/lib/data/branding";
 import HomePage from "@/components/home/HomePage";
 
-const homeTitle = "ASC AXIOM TECH | A Base S\u00f3lida da Sua Performance Digital";
+const homeTitle = "ASC AXIOM TECH | Tecnologia Construída para o Próximo Nível";
 const homeDescription =
-  "Desenvolvemos plataformas tecnol\u00f3gicas, sistemas robustos e solu\u00e7\u00f5es orientadas por IA, automa\u00e7\u00e3o, SaaS e Web3 para neg\u00f3cios, opera\u00e7\u00f5es e produtos com ambi\u00e7\u00e3o global.";
+  "Construímos software, infraestrutura digital e sistemas inteligentes para empresas e produtos com ambição global — combinando IA, automação, SaaS, Web3 e segurança.";
 const socialImage = ascBrand.logo;
 
 export const metadata: Metadata = {
@@ -12,13 +12,14 @@ export const metadata: Metadata = {
   description: homeDescription,
   keywords: [
     "ASC Axiom Tech",
+    "Global Technology Company",
     "SaaS",
-    "Intelig\u00eancia Artificial",
-    "Automatiza\u00e7\u00e3o",
+    "Inteligência Artificial",
+    "Automação",
     "Web3",
     "Desenvolvimento de Software",
     "Consultoria IA",
-    "Tecnologia em Angola",
+    "Infraestrutura Digital",
   ],
   authors: [{ name: "ASC AXIOM TECH" }],
   creator: "ASC AXIOM TECH",
@@ -29,24 +30,24 @@ export const metadata: Metadata = {
   openGraph: {
     title: homeTitle,
     description:
-      "Desenvolvemos plataformas tecnol\u00f3gicas, sistemas robustos e solu\u00e7\u00f5es orientadas por IA, automa\u00e7\u00e3o, SaaS e Web3 para neg\u00f3cios com ambi\u00e7\u00e3o global.",
+      "Construímos software, infraestrutura digital e sistemas inteligentes para empresas e produtos com ambição global — combinando IA, automação, SaaS, Web3 e segurança.",
     url: "https://ascaxiomtech.com",
     siteName: "ASC AXIOM TECH",
-    locale: "pt_AO",
+    locale: "pt_PT",
     type: "website",
     images: [
       {
         url: socialImage,
         width: 1200,
         height: 630,
-        alt: "ASC AXIOM TECH - Performance Digital",
+        alt: "ASC AXIOM TECH - Tecnologia Construída para o Próximo Nível",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ASC AXIOM TECH | Performance Digital",
-    description: "Sistemas robustos e solu\u00e7\u00f5es orientadas por IA, automa\u00e7\u00e3o, SaaS e Web3.",
+    title: "ASC AXIOM TECH | Tecnologia Construída para o Próximo Nível",
+    description: "Software, infraestrutura digital e sistemas inteligentes para empresas com ambição global.",
     images: [socialImage],
   },
   robots: {
