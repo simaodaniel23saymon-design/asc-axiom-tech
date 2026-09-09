@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 export default function InvestorsPage() {
   return (
     <div className="ops-page">

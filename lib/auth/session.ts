@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createHmac } from "crypto";
 
 export const COOKIE_NAME = "asc_ops_session";
 
@@ -12,32 +11,62 @@ export type SessionUser = {
 
 const fallbackSecret = "asc-axiom-tech-local-dev-secret";
 
+function toBase64Url(value: string | Uint8Array) {
+  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
+  let binary = "";
+
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function fromBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return bytes;
+}
+
+function getCryptoKey(secret: string) {
+  const encodedKey = new TextEncoder().encode(secret);
+  return crypto.subtle.importKey("raw", encodedKey, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+
 export function getSessionSecret() {
   return process.env.OPS_AUTH_SECRET ?? fallbackSecret;
 }
 
-export function signSession(payload: SessionUser) {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
-  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = createHmac("sha256", getSessionSecret())
-    .update(`${header}.${body}`)
-    .digest("base64url");
+export async function signSession(payload: SessionUser) {
+  const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const body = toBase64Url(JSON.stringify(payload));
+  const signingInput = `${header}.${body}`;
+  const key = await getCryptoKey(getSessionSecret());
+  const signatureBytes = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signingInput));
+  const signature = toBase64Url(new Uint8Array(signatureBytes));
 
-  return `${header}.${body}.${signature}`;
+  return `${signingInput}.${signature}`;
 }
 
-export function verifySession(token: string) {
+export async function verifySession(token: string) {
   try {
     const [header, payload, signature] = token.split(".");
     if (!header || !payload || !signature) return null;
 
-    const expected = createHmac("sha256", getSessionSecret())
-      .update(`${header}.${payload}`)
-      .digest("base64url");
+    const signingInput = `${header}.${payload}`;
+    const key = await getCryptoKey(getSessionSecret());
+    const expected = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      fromBase64Url(signature),
+      new TextEncoder().encode(signingInput),
+    );
 
-    if (expected !== signature) return null;
+    if (!expected) return null;
 
-    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf-8")) as SessionUser;
+    const decoded = JSON.parse(new TextDecoder().decode(fromBase64Url(payload))) as SessionUser;
     if (!decoded.email || !decoded.name || !decoded.role) return null;
 
     return decoded;
@@ -46,15 +75,15 @@ export function verifySession(token: string) {
   }
 }
 
-export function getCurrentUser() {
+export async function getCurrentUser() {
   const sessionCookie = cookies().get(COOKIE_NAME)?.value;
   if (!sessionCookie) return null;
 
   return verifySession(sessionCookie);
 }
 
-export function requireUser() {
-  const user = getCurrentUser();
+export async function requireUser() {
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");

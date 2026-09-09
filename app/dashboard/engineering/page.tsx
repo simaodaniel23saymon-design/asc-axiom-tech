@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 export default function EngineeringPage() {
   return (
     <div className="ops-page">

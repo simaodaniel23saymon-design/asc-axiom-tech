@@ -1,5 +1,7 @@
 import { projects } from "@/lib/data/ops";
 
+export const runtime = "edge";
+
 export default function ProjectsPage() {
   return (
     <div className="ops-page">

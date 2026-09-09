@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import CommandCenterShell from "@/components/ops/CommandCenterShell";
 import { getCurrentUser } from "@/lib/auth/session";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = getCurrentUser();
+export const runtime = "edge";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");

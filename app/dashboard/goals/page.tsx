@@ -1,5 +1,7 @@
 import { goals } from "@/lib/data/ops";
 
+export const runtime = "edge";
+
 export default function GoalsPage() {
   return (
     <div className="ops-page">

@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { COOKIE_NAME, signSession } from "@/lib/auth/session";
 
+export const runtime = "edge";
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     email?: string;
@@ -17,7 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
 
-  const token = signSession({
+  const token = await signSession({
     email,
     name: "Afonso Costa",
     role: "admin",

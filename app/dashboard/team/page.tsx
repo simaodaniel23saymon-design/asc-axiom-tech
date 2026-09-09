@@ -1,5 +1,7 @@
 import { teamMembers } from "@/lib/data/ops";
 
+export const runtime = "edge";
+
 export default function TeamPage() {
   return (
     <div className="ops-page">

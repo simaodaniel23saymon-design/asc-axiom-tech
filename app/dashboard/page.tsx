@@ -1,5 +1,7 @@
 import { dashboardSummary, goals, tasks, activities } from "@/lib/data/ops";
 
+export const runtime = "edge";
+
 export default function DashboardOverviewPage() {
   return (
     <div className="ops-page">
