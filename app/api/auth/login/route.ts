@@ -1,6 +1,9 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { COOKIE_NAME, signSession } from "@/lib/auth/session";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/lib/db";
+import { users } from "@/db/schema";
+import { createSession, recordAuthActivity, sessionCookieOptions } from "@/lib/auth/session";
+import { verifyPassword } from "@/lib/auth/password";
 
 export const runtime = "edge";
 
@@ -12,26 +15,23 @@ export async function POST(request: Request) {
 
   const email = body.email?.trim().toLowerCase();
   const password = body.password ?? "";
-  const validEmail = "admin@ascaxiomtech.com";
-  const validPassword = process.env.DEV_OPS_PASSWORD ?? "NZoCHAIN2025!";
-
-  if (!email || !password || email !== validEmail || password !== validPassword) {
+  if (!email || !password) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
 
-  const token = await signSession({
-    email,
-    name: "Afonso Costa",
-    role: "admin",
-  });
+  const db = getDb();
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const user = rows[0];
 
-  cookies().set(COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 8,
-  });
+  if (!user || user.status !== "active" || !(await verifyPassword(password, user.passwordHash))) {
+    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+  }
 
-  return NextResponse.json({ ok: true, redirectTo: "/dashboard" });
+  const session = await createSession(user);
+  await recordAuthActivity(user.id, "login", "User signed in.");
+
+  const response = NextResponse.json({ ok: true, redirectTo: "/dashboard" });
+  response.cookies.set("asc_ops_session", session.token, sessionCookieOptions(session.expiresAt));
+
+  return response;
 }

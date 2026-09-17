@@ -1,4 +1,5 @@
 import type { SessionUser } from "@/lib/auth/session";
+import { hasRole, type UserRole } from "@/lib/auth/permissions";
 
 export default function CommandCenterShell({
   user,
@@ -8,14 +9,16 @@ export default function CommandCenterShell({
   children: React.ReactNode;
 }) {
   const navigation = [
-    { label: "Overview", href: "/dashboard" },
-    { label: "Goals", href: "/dashboard/goals" },
-    { label: "Projects", href: "/dashboard/projects" },
-    { label: "Roadmap", href: "/dashboard/roadmap" },
-    { label: "Team", href: "/dashboard/team" },
-    { label: "Investors", href: "/dashboard/investors" },
-    { label: "Engineering", href: "/dashboard/engineering" },
-  ];
+    { label: "Overview", href: "/dashboard", roles: ["admin", "team"] },
+    { label: "Goals", href: "/dashboard/goals", roles: ["admin", "team"] },
+    { label: "Projects", href: "/dashboard/projects", roles: ["admin", "team"] },
+    { label: "Roadmap", href: "/dashboard/roadmap", roles: ["admin", "team"] },
+    { label: "Team", href: "/dashboard/team", roles: ["admin", "team"] },
+    { label: "Investors", href: "/dashboard/investors", roles: ["admin", "investor"] },
+    { label: "Engineering", href: "/dashboard/engineering", roles: ["admin", "team"] },
+  ] satisfies { label: string; href: string; roles: readonly UserRole[] }[];
+
+  const visibleNavigation = navigation.filter((item) => hasRole(user, item.roles));
 
   return (
     <div className="ops-shell">
@@ -29,7 +32,7 @@ export default function CommandCenterShell({
         </div>
 
         <nav className="ops-nav" aria-label="Main navigation">
-          {navigation.map((item) => (
+          {visibleNavigation.map((item) => (
             <a key={item.href} href={item.href} className="ops-nav-item">
               {item.label}
             </a>
@@ -40,9 +43,11 @@ export default function CommandCenterShell({
           <span className="ops-role">{user.role}</span>
           <strong>{user.name}</strong>
           <small>{user.email}</small>
-          <a href="/api/auth/logout" className="ops-logout-link">
-            Sign out
-          </a>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="ops-logout-link">
+              Sign out
+            </button>
+          </form>
         </div>
       </aside>
 

@@ -1,93 +1,83 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { and, eq, gt } from "drizzle-orm";
+import { users, sessions, activities } from "@/db/schema";
+import { getDb } from "@/lib/db";
 
 export const COOKIE_NAME = "asc_ops_session";
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export type SessionUser = {
+  id: string;
   email: string;
   name: string;
   role: "admin" | "team" | "investor";
 };
 
-const fallbackSecret = "asc-axiom-tech-local-dev-secret";
-
-function toBase64Url(value: string | Uint8Array) {
-  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
+function toBase64Url(value: Uint8Array) {
   let binary = "";
 
-  bytes.forEach((byte) => {
+  value.forEach((byte) => {
     binary += String.fromCharCode(byte);
   });
 
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function fromBase64Url(value: string) {
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-  const binary = atob(padded);
-  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-  return bytes;
+async function hashToken(token: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return toBase64Url(new Uint8Array(digest));
 }
 
-function getCryptoKey(secret: string) {
-  const encodedKey = new TextEncoder().encode(secret);
-  return crypto.subtle.importKey("raw", encodedKey, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+function createToken() {
+  return toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
 }
 
-export function getSessionSecret() {
-  return process.env.OPS_AUTH_SECRET ?? fallbackSecret;
+export async function createSession(user: SessionUser) {
+  const token = createToken();
+  const tokenHash = await hashToken(token);
+  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000);
+  const db = getDb();
+
+  await db.insert(sessions).values({ userId: user.id, tokenHash, expiresAt });
+
+  return { token, expiresAt };
 }
 
-export async function signSession(payload: SessionUser) {
-  const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const body = toBase64Url(JSON.stringify(payload));
-  const signingInput = `${header}.${body}`;
-  const key = await getCryptoKey(getSessionSecret());
-  const signatureBytes = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signingInput));
-  const signature = toBase64Url(new Uint8Array(signatureBytes));
+export async function getCurrentUser(): Promise<SessionUser | null> {
+  const token = cookies().get(COOKIE_NAME)?.value;
+  if (!token) return null;
 
-  return `${signingInput}.${signature}`;
+  const tokenHash = await hashToken(token);
+  const db = getDb();
+  const rows = await db
+    .select({ id: users.id, email: users.email, name: users.name, role: users.role })
+    .from(sessions)
+    .innerJoin(users, eq(sessions.userId, users.id))
+    .where(and(eq(sessions.tokenHash, tokenHash), gt(sessions.expiresAt, new Date()), eq(users.status, "active")))
+    .limit(1);
+
+  return rows[0] ?? null;
 }
 
-export async function verifySession(token: string) {
-  try {
-    const [header, payload, signature] = token.split(".");
-    if (!header || !payload || !signature) return null;
+export async function revokeCurrentSession() {
+  const token = cookies().get(COOKIE_NAME)?.value;
+  if (!token) return;
 
-    const signingInput = `${header}.${payload}`;
-    const key = await getCryptoKey(getSessionSecret());
-    const expected = await crypto.subtle.verify(
-      "HMAC",
-      key,
-      fromBase64Url(signature),
-      new TextEncoder().encode(signingInput),
-    );
-
-    if (!expected) return null;
-
-    const decoded = JSON.parse(new TextDecoder().decode(fromBase64Url(payload))) as SessionUser;
-    if (!decoded.email || !decoded.name || !decoded.role) return null;
-
-    return decoded;
-  } catch {
-    return null;
-  }
+  const db = getDb();
+  await db.delete(sessions).where(eq(sessions.tokenHash, await hashToken(token)));
 }
 
-export async function getCurrentUser() {
-  const sessionCookie = cookies().get(COOKIE_NAME)?.value;
-  if (!sessionCookie) return null;
-
-  return verifySession(sessionCookie);
+export async function recordAuthActivity(userId: string, type: "login" | "logout", text: string) {
+  const db = getDb();
+  await db.insert(activities).values({ userId, type, text });
 }
 
-export async function requireUser() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  return user;
+export function sessionCookieOptions(expiresAt: Date) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: expiresAt,
+  };
 }
