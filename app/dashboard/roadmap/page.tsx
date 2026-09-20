@@ -23,7 +23,7 @@ export default async function RoadmapPage() {
   let errorMessage: string | null = null;
 
   try {
-    const requestHeaders = headers();
+    const requestHeaders = await headers();
     const protocol =
       requestHeaders.get("x-forwarded-proto") ?? "http";
     const host =
@@ -38,7 +38,7 @@ export default async function RoadmapPage() {
       `${protocol}://${host}/api/ops/roadmap`,
       {
         headers: {
-          cookie: cookies().toString(),
+          cookie: (await cookies()).toString(),
         },
         cache: "no-store",
       },

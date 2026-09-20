@@ -1,9 +1,10 @@
 import { asc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { teamMembers } from "@/db/schema";
+import { activities, teamMembers, users } from "@/db/schema";
 import { authorizeApi } from "@/lib/auth/authorize-api";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
+import { hashPassword } from "@/lib/auth/password";
 import { teamMemberCreateSchema } from "@/lib/validation/team";
 
 export const runtime = "edge";
@@ -16,32 +17,30 @@ export async function GET() {
     if (authorizationError) {
       return authorizationError;
     }
-  } catch (error) {
-    console.error("[ops/team] Falha ao processar a autorização.", error);
 
-    return NextResponse.json(
-      { error: "Erro interno ao processar a autorização." },
-      { status: 500 },
-    );
-  }
-
-  try {
     const db = getDb();
 
     const members = await db
       .select({
         id: teamMembers.id,
+        userId: teamMembers.userId,
         name: teamMembers.name,
         role: teamMembers.role,
         focus: teamMembers.focus,
         active: teamMembers.active,
+        email: users.email,
+        systemRole: users.role,
+        userStatus: users.status,
+        profileCompleted: users.profileCompleted,
+        mustChangePassword: users.mustChangePassword,
       })
       .from(teamMembers)
+      .leftJoin(users, eq(teamMembers.userId, users.id))
       .orderBy(asc(teamMembers.createdAt), asc(teamMembers.id));
 
     return NextResponse.json({ data: members });
   } catch (error) {
-    console.error("[ops/team] Falha ao consultar membros da equipa.", error);
+    console.error("[ops/team] Falha ao consultar a equipa.", error);
 
     return NextResponse.json(
       { error: "Erro interno ao consultar a equipa." },
@@ -53,10 +52,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
-    const authorizationError = authorizeApi(user, ["admin", "team"]);
+    const authorizationError = authorizeApi(user, ["admin"]);
 
     if (authorizationError) {
       return authorizationError;
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autenticado." },
+        { status: 401 },
+      );
     }
 
     const body = await request.json();
@@ -72,35 +78,87 @@ export async function POST(request: Request) {
       );
     }
 
+    const email = parsed.data.email.toLowerCase();
     const db = getDb();
 
-    const [member] = await db
-      .insert(teamMembers)
+    const [existingUser] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "Já existe uma conta com este email." },
+        { status: 409 },
+      );
+    }
+
+    const passwordHash = await hashPassword(parsed.data.password);
+
+    const [createdUser] = await db
+      .insert(users)
       .values({
         name: parsed.data.name,
-        role: parsed.data.role,
-        focus: parsed.data.focus ?? null,
-        active: parsed.data.active,
+        email,
+        passwordHash,
+        role: parsed.data.systemRole,
+        status: parsed.data.active ? "active" : "inactive",
+        mustChangePassword: true,
+        profileCompleted: false,
       })
       .returning({
-        id: teamMembers.id,
-        name: teamMembers.name,
-        role: teamMembers.role,
-        focus: teamMembers.focus,
-        active: teamMembers.active,
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        status: users.status,
       });
 
-    await db.insert((await import("@/db/schema")).activities).values({
-      userId: user?.id ?? null,
-      type: "team_member_created",
-      text: `Membro da equipa criado: ${member.name}`,
-      entityType: "team_member",
-      entityId: member.id,
-    });
+    try {
+      const [member] = await db
+        .insert(teamMembers)
+        .values({
+          userId: createdUser.id,
+          name: parsed.data.name,
+          role: parsed.data.role,
+          focus: parsed.data.focus ?? null,
+          active: parsed.data.active,
+        })
+        .returning({
+          id: teamMembers.id,
+          userId: teamMembers.userId,
+          name: teamMembers.name,
+          role: teamMembers.role,
+          focus: teamMembers.focus,
+          active: teamMembers.active,
+        });
 
-    return NextResponse.json({ data: member }, { status: 201 });
+      await db.insert(activities).values({
+        userId: user.id,
+        type: "team_member_created",
+        text: `Membro da equipa e conta criados: ${member.name}`,
+        entityType: "team_member",
+        entityId: member.id,
+      });
+
+      return NextResponse.json(
+        {
+          data: {
+            ...member,
+            email: createdUser.email,
+            systemRole: createdUser.role,
+            userStatus: createdUser.status,
+          },
+        },
+        { status: 201 },
+      );
+    } catch (error) {
+      await db.delete(users).where(eq(users.id, createdUser.id));
+      throw error;
+    }
   } catch (error) {
-    console.error("[ops/team] Falha ao criar membro da equipa.", error);
+    console.error("[ops/team] Falha ao criar membro e conta.", error);
 
     return NextResponse.json(
       { error: "Erro interno ao criar o membro da equipa." },

@@ -27,9 +27,11 @@ const projectResponse = {
 // Actualiza um projecto operacional e regista a operação no histórico.
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     // Verifica a sessão e o role antes de permitir alterações operacionais.
     const user = await getCurrentUser();
     const authorizationError = authorizeApi(user, ["admin", "team"]);
@@ -44,7 +46,7 @@ export async function PUT(
     }
 
     // Valida o identificador antes de o usar na consulta à base de dados.
-    const idResult = z.uuid().safeParse(params.id);
+    const idResult = z.uuid().safeParse(id);
 
     if (!idResult.success) {
       return NextResponse.json(
@@ -142,9 +144,11 @@ export async function PUT(
 // Elimina um projecto operacional e regista a operação no histórico.
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     // Apenas administradores podem eliminar projectos operacionais.
     const user = await getCurrentUser();
     const authorizationError = authorizeApi(user, ["admin"]);
@@ -158,7 +162,7 @@ export async function DELETE(
     }
 
     // Valida o identificador antes de o usar nas consultas à base de dados.
-    const idResult = z.uuid().safeParse(params.id);
+    const idResult = z.uuid().safeParse(id);
 
     if (!idResult.success) {
       return NextResponse.json(

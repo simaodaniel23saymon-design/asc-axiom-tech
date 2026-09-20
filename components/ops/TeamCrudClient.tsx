@@ -5,37 +5,59 @@ import { useRouter } from "next/navigation";
 import ConfirmDelete from "@/components/ops/crud/ConfirmDelete";
 import FormActions from "@/components/ops/crud/FormActions";
 
+type SystemRole = "admin" | "team" | "investor";
+
 type TeamMember = {
   id: string;
+  userId: string | null;
   name: string;
   role: string;
   focus: string | null;
   active: boolean;
+  email: string | null;
+  systemRole: SystemRole | null;
+  userStatus: "active" | "inactive" | null;
+  profileCompleted: boolean | null;
+  mustChangePassword: boolean | null;
 };
 
 type TeamCrudClientProps = {
   teamMembers: TeamMember[];
   canDelete: boolean;
+  canManageUsers: boolean;
   initialError?: string;
 };
 
 type FormState = {
   name: string;
+  email: string;
   role: string;
+  systemRole: SystemRole;
   focus: string;
+  password: string;
   active: boolean;
 };
 
 const emptyForm: FormState = {
   name: "",
+  email: "",
   role: "",
+  systemRole: "team",
   focus: "",
+  password: "",
   active: true,
+};
+
+const systemRoleLabels: Record<SystemRole, string> = {
+  admin: "Administrador",
+  team: "Equipa",
+  investor: "Investidor",
 };
 
 export default function TeamCrudClient({
   teamMembers,
   canDelete,
+  canManageUsers,
   initialError = "",
 }: TeamCrudClientProps) {
   const router = useRouter();
@@ -44,14 +66,14 @@ export default function TeamCrudClient({
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState<TeamMember | null>(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const [error, setError] = useState(initialError);
   const [success, setSuccess] = useState("");
 
   function openCreate() {
+    if (!canManageUsers) return;
+
     setEditing(null);
     setForm(emptyForm);
     setError("");
@@ -64,8 +86,11 @@ export default function TeamCrudClient({
     setEditing(member);
     setForm({
       name: member.name,
+      email: member.email ?? "",
       role: member.role,
+      systemRole: member.systemRole ?? "team",
       focus: member.focus ?? "",
+      password: "",
       active: member.active,
     });
     setError("");
@@ -89,11 +114,18 @@ export default function TeamCrudClient({
     setSuccess("");
 
     const name = form.name.trim();
+    const email = form.email.trim().toLowerCase();
     const role = form.role.trim();
     const focus = form.focus.trim();
+    const password = form.password;
 
     if (!name) {
       setError("O nome é obrigatório.");
+      return;
+    }
+
+    if (!email) {
+      setError("O email é obrigatório.");
       return;
     }
 
@@ -102,8 +134,18 @@ export default function TeamCrudClient({
       return;
     }
 
+    if (!editing && password.length < 8) {
+      setError("A password inicial deve ter pelo menos 8 caracteres.");
+      return;
+    }
+
     if (name.length > 200) {
       setError("O nome não pode ultrapassar 200 caracteres.");
+      return;
+    }
+
+    if (email.length > 320) {
+      setError("O email não pode ultrapassar 320 caracteres.");
       return;
     }
 
@@ -129,8 +171,11 @@ export default function TeamCrudClient({
           },
           body: JSON.stringify({
             name,
+            email,
             role,
+            systemRole: form.systemRole,
             focus: focus || null,
+            ...(editing ? {} : { password }),
             active: form.active,
           }),
         },
@@ -152,7 +197,7 @@ export default function TeamCrudClient({
       setSuccess(
         editing
           ? "Membro da equipa actualizado com sucesso."
-          : "Membro da equipa criado com sucesso.",
+          : "Membro e conta de acesso criados com sucesso.",
       );
 
       router.refresh();
@@ -217,9 +262,11 @@ export default function TeamCrudClient({
         >
           <span className="status-pill neutral">Core functions</span>
 
-          <button type="button" className="btn-primary" onClick={openCreate}>
-            + Novo membro
-          </button>
+          {canManageUsers ? (
+            <button type="button" className="btn-primary" onClick={openCreate}>
+              + Novo membro
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -263,6 +310,24 @@ export default function TeamCrudClient({
             </label>
 
             <label>
+              <span>Email de acesso *</span>
+              <input
+                className="input"
+                type="email"
+                value={form.email}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }))
+                }
+                placeholder="nome@empresa.com"
+                maxLength={320}
+                disabled={isSubmitting || Boolean(editing)}
+              />
+            </label>
+
+            <label>
               <span>Cargo *</span>
               <input
                 className="input"
@@ -273,10 +338,31 @@ export default function TeamCrudClient({
                     role: event.target.value,
                   }))
                 }
-                placeholder="Ex.: CEO"
+                placeholder="Ex.: Software Engineer"
                 maxLength={150}
                 disabled={isSubmitting}
               />
+            </label>
+
+            <label>
+              <span>Permissão do sistema *</span>
+              <select
+                className="input"
+                value={form.systemRole}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    systemRole: event.target.value as SystemRole,
+                  }))
+                }
+                disabled={isSubmitting || !canManageUsers}
+              >
+                {Object.entries(systemRoleLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label style={{ gridColumn: "1 / -1" }}>
@@ -290,11 +376,33 @@ export default function TeamCrudClient({
                     focus: event.target.value,
                   }))
                 }
-                placeholder="Ex.: Company direction and NZoCHAIN narrative"
+                placeholder="Ex.: Desenvolvimento Web"
                 maxLength={500}
                 disabled={isSubmitting}
               />
             </label>
+
+            {!editing ? (
+              <label style={{ gridColumn: "1 / -1" }}>
+                <span>Password inicial *</span>
+                <input
+                  className="input"
+                  type="password"
+                  value={form.password}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }))
+                  }
+                  placeholder="Mínimo de 8 caracteres"
+                  minLength={8}
+                  maxLength={200}
+                  autoComplete="new-password"
+                  disabled={isSubmitting}
+                />
+              </label>
+            ) : null}
 
             <label
               style={{
@@ -340,32 +448,47 @@ export default function TeamCrudClient({
           {teamMembers.map((member) => (
             <div key={member.id}>
               <article className="team-card">
-                <div className="avatar">
-                  {member.name
-                    .split(" ")
-                    .map((part) => part[0])
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase()}
+                <div className="team-card-top">
+                  <div className="avatar" aria-hidden="true">
+                    {member.name
+                      .split(" ")
+                      .map((part) => part[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()}
+                  </div>
+
+                  <span
+                    className={`team-status ${
+                      member.active ? "active" : "inactive"
+                    }`}
+                  >
+                    <span aria-hidden="true">●</span>
+                    {member.active ? "Activo" : "Inactivo"}
+                  </span>
                 </div>
 
-                <strong>{member.name}</strong>
+                <div className="team-card-identity">
+                  <strong>{member.name}</strong>
+                  <span>{member.role}</span>
+                </div>
 
-                <span>{member.role}</span>
+                {member.email ? (
+                  <p className="team-card-focus">{member.email}</p>
+                ) : null}
 
-                {member.focus ? <small>{member.focus}</small> : null}
+                {member.focus ? (
+                  <p className="team-card-focus">{member.focus}</p>
+                ) : (
+                  <p className="team-card-focus team-card-focus-empty">
+                    Sem área ou foco definido.
+                  </p>
+                )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    marginTop: 16,
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div className="team-card-actions">
                   <button
                     type="button"
-                    className="btn-ghost"
+                    className="btn-secondary"
                     onClick={() => openEdit(member)}
                   >
                     Editar
@@ -374,7 +497,7 @@ export default function TeamCrudClient({
                   {canDelete ? (
                     <button
                       type="button"
-                      className="btn-ghost"
+                      className="btn-danger"
                       onClick={() => {
                         setDeleting(member);
                         setError("");

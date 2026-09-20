@@ -18,6 +18,7 @@ export const db: AppDbClient | null = (() => {
 
   if (!globalThis.__ascAxiomDb) {
     const sql = neon(databaseUrl);
+
     globalThis.__ascAxiomDb = drizzle(sql, { schema });
   }
 

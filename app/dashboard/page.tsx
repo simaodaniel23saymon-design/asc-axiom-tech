@@ -1,12 +1,12 @@
-import { cookies, headers } from "next/headers";
-import { requireRole } from "@/lib/auth/require-role";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getOverviewData } from "@/lib/ops/overview";
 export const runtime = "edge";
 type T = {
   id: string;
   title: string;
   priority: "high" | "medium" | "low";
   ownerLabel: string | null;
-  dueDate: string;
+  dueDate: Date | null;
   project: { id: string; name: string } | null;
 };
 type G = {
@@ -14,14 +14,7 @@ type G = {
   title: string;
   progress: number;
   target: string | null;
-  deadline: string | null;
-};
-type A = {
-  id: string;
-  text: string;
-  createdAt: string;
-  actorName: string | null;
-  entityType: string | null;
+  deadline: Date | null;
 };
 type O = {
   kpis: {
@@ -39,10 +32,11 @@ type O = {
     overdueTasks: T[];
     upcomingTasks: T[];
     atRiskGoals: G[];
-    recentActivities: A[];
   };
 };
-function date(v: string, time = false) {
+function date(v: string | Date | null, time = false) {
+  if (!v) return "Data indisponível";
+
   const d = new Date(v);
   return Number.isNaN(d.getTime())
     ? "Data indisponível"
@@ -58,179 +52,215 @@ function date(v: string, time = false) {
           : { day: "2-digit", month: "short", year: "numeric" },
       ).format(d);
 }
-function activityHref(entityType: string | null) {
-  if (entityType === "project") return "/dashboard/projects";
-  if (entityType === "goal") return "/dashboard/goals";
-  if (entityType === "roadmap") return "/dashboard/roadmap";
-  return null;
-}
-
 export default async function DashboardOverviewPage() {
-  await requireRole(["admin", "team"]);
   let o: O | null = null,
     e = "";
+
   try {
-    const h = headers(),
-      p = h.get("x-forwarded-proto") ?? "http",
-      host = h.get("x-forwarded-host") ?? h.get("host");
-    if (!host) throw Error();
-    const r = await fetch(p + "://" + host + "/api/ops/overview", {
-        headers: { cookie: cookies().toString() },
-        cache: "no-store",
-      }),
-      x = (await r.json().catch(() => null)) as O | { error?: string } | null;
-    if (!r.ok)
-      e =
-        x && "error" in x && x.error
-          ? x.error
-          : "Não foi possível carregar a Overview.";
-    else if (
-      x &&
-      "kpis" in x &&
-      "lists" in x &&
-      Array.isArray(x.lists.overdueTasks) &&
-      Array.isArray(x.lists.upcomingTasks) &&
-      Array.isArray(x.lists.atRiskGoals) &&
-      Array.isArray(x.lists.recentActivities)
-    )
-      o = x;
-    else e = "A resposta da Overview é inválida.";
-  } catch {
-    e = "Não foi possível carregar a Overview.";
+    const user = await getCurrentUser();
+
+    if (!user) {
+      e = "Sessão inválida. Faça novamente o login.";
+    } else if (user.role !== "admin" && user.role !== "team") {
+      e = "Não tem permissão para consultar a Overview.";
+    } else {
+      o = await getOverviewData(user);
+    }
+  } catch (error) {
+    console.error("[dashboard] Falha ao carregar a Overview.", error);
+    e = "Erro interno ao consultar dados da Overview.";
   }
+
   const ts = o ? [...o.lists.overdueTasks, ...o.lists.upcomingTasks] : [];
   return (
     <div className="ops-page">
       {e ? <p className="empty-state">{e}</p> : null}
       {o ? (
         <>
-          <section className="stats-grid">
-            <a href="/dashboard/projects" className="ops-card">
-              <span>Active projects</span>
-              <strong>{o.kpis.activeProjects}</strong>
-              <small>{o.kpis.blockedProjects} blocked</small>
+          <section className="dashboard-kpi-grid">
+            <a href="/dashboard/projects" className="dashboard-kpi-card">
+              <div className="dashboard-kpi-top">
+                <span className="dashboard-kpi-label">Projectos activos</span>
+                <span className="dashboard-kpi-icon" aria-hidden="true">↗</span>
+              </div>
+              <strong className="dashboard-kpi-value">
+                {o.kpis.activeProjects}
+              </strong>
+              <div className="dashboard-kpi-footer">
+                <span className={o.kpis.blockedProjects > 0 ? "dashboard-kpi-alert" : ""}>
+                  {o.kpis.blockedProjects} bloqueado{o.kpis.blockedProjects === 1 ? "" : "s"}
+                </span>
+                <span>Projectos</span>
+              </div>
             </a>
-            <a href="/dashboard/goals" className="ops-card">
-              <span>Goals on track</span>
-              <strong>{o.kpis.goalsOnTrack}</strong>
-              <small>{o.kpis.goalsAtRisk} at risk</small>
+
+            <a href="/dashboard/goals" className="dashboard-kpi-card">
+              <div className="dashboard-kpi-top">
+                <span className="dashboard-kpi-label">Objectivos em progresso</span>
+                <span className="dashboard-kpi-icon" aria-hidden="true">◎</span>
+              </div>
+              <strong className="dashboard-kpi-value">
+                {o.kpis.goalsOnTrack}
+              </strong>
+              <div className="dashboard-kpi-footer">
+                <span className={o.kpis.goalsAtRisk > 0 ? "dashboard-kpi-alert" : ""}>
+                  {o.kpis.goalsAtRisk} em risco
+                </span>
+                <span>Objectivos</span>
+              </div>
             </a>
-            <a href="/dashboard/engineering" className="ops-card">
-              <span>Tasks due next 7 days</span>
-              <strong>{o.kpis.tasksDueNext7Days}</strong>
-              <small>{o.kpis.overdueTasks} overdue</small>
+
+            <a href="/dashboard/engineering" className="dashboard-kpi-card">
+              <div className="dashboard-kpi-top">
+                <span className="dashboard-kpi-label">Tasks · próximos 7 dias</span>
+                <span className="dashboard-kpi-icon" aria-hidden="true">✓</span>
+              </div>
+              <strong className="dashboard-kpi-value">
+                {o.kpis.tasksDueNext7Days}
+              </strong>
+              <div className="dashboard-kpi-footer">
+                <span className={o.kpis.overdueTasks > 0 ? "dashboard-kpi-alert" : ""}>
+                  {o.kpis.overdueTasks} em atraso
+                </span>
+                <span>Planeamento</span>
+              </div>
             </a>
-            <a href="/dashboard/team" className="ops-card">
-              <span>Active team members</span>
-              <strong>{o.kpis.activeTeamMembers}</strong>
-              <small>
-                {o.kpis.milestonesDueNext14Days} milestones due ·{" "}
-                {o.kpis.overdueMilestones} overdue
-              </small>
+
+            <a href="/dashboard/team" className="dashboard-kpi-card">
+              <div className="dashboard-kpi-top">
+                <span className="dashboard-kpi-label">Membros activos</span>
+                <span className="dashboard-kpi-icon" aria-hidden="true">●</span>
+              </div>
+              <strong className="dashboard-kpi-value">
+                {o.kpis.activeTeamMembers}
+              </strong>
+              <div className="dashboard-kpi-footer">
+                <span>
+                  {o.kpis.milestonesDueNext14Days} milestone{o.kpis.milestonesDueNext14Days === 1 ? "" : "s"} próximos
+                </span>
+                <span>{o.kpis.overdueMilestones} em atraso</span>
+              </div>
             </a>
           </section>
-          <section className="content-grid two-col">
-            <article className="ops-card">
-              <div className="card-header-row">
-                <h2>Priority tasks</h2>
-                <span className="status-pill neutral">Due dates</span>
+          <section className="dashboard-main-grid">
+            <article className="dashboard-panel">
+              <div className="dashboard-panel-header">
+                <div>
+                  <span className="dashboard-panel-eyebrow">Execução</span>
+                  <h2>Tasks prioritárias</h2>
+                  <p>Acompanhe tarefas atrasadas e com prazo próximo.</p>
+                </div>
+                <a href="/dashboard/engineering" className="dashboard-panel-link">
+                  Ver engenharia <span aria-hidden="true">→</span>
+                </a>
               </div>
+
               {ts.length === 0 ? (
-                <p className="empty-state">No overdue or upcoming tasks.</p>
+                <div className="dashboard-empty">
+                  <span className="dashboard-empty-icon" aria-hidden="true">✓</span>
+                  <div>
+                    <strong>Sem tarefas pendentes</strong>
+                    <span>Não existem tasks atrasadas ou próximas.</span>
+                  </div>
+                </div>
               ) : (
-                <ul className="task-list">
-                  {ts.map((t) => (
-                    <li key={t.id}>
-                      <a href="/dashboard/engineering" className="task-item">
-                        <div>
-                          <strong>{t.title}</strong>
-                          <small>
-                            {t.ownerLabel ?? "Unassigned"}
-                            {t.project ? " · " + t.project.name : ""}
-                          </small>
-                        </div>
-                        <div className="task-meta">
-                          <span className={"priority-badge " + t.priority}>
-                            {t.priority}
-                          </span>
-                          <time dateTime={t.dueDate}>{date(t.dueDate)}</time>
-                        </div>
-                      </a>
-                    </li>
-                  ))}
+                <ul className="dashboard-task-list">
+                  {ts.map((t) => {
+                    const overdue = t.dueDate ? t.dueDate.getTime() < Date.now() : false;
+
+                    return (
+                      <li key={t.id}>
+                        <a href="/dashboard/engineering" className="dashboard-task-item">
+                          <div className="dashboard-task-main">
+                            <div className="dashboard-task-title-row">
+                              <span
+                                className={`dashboard-task-indicator ${
+                                  overdue ? "overdue" : "upcoming"
+                                }`}
+                                aria-hidden="true"
+                              />
+                              <strong>{t.title}</strong>
+                            </div>
+
+                            <div className="dashboard-task-context">
+                              <span>{t.ownerLabel ?? "Sem responsável"}</span>
+                              {t.project ? (
+                                <span>{t.project.name}</span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="dashboard-task-meta">
+                            <span className={"priority-badge " + t.priority}>
+                              {t.priority === "high"
+                                ? "Alta"
+                                : t.priority === "medium"
+                                  ? "Média"
+                                  : "Baixa"}
+                            </span>
+                            <time
+                              className={overdue ? "dashboard-task-date overdue" : ""}
+                              dateTime={t.dueDate?.toISOString()}
+                            >
+                              {date(t.dueDate)}
+                            </time>
+                          </div>
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </article>
-            <article className="ops-card">
-              <div className="card-header-row">
-                <h2>Goals at risk</h2>
-                <span className="status-pill neutral">
+
+            <article className="dashboard-panel">
+              <div className="dashboard-panel-header">
+                <div>
+                  <span className="dashboard-panel-eyebrow">Atenção</span>
+                  <h2>Objectivos em risco</h2>
+                  <p>Objectivos que precisam de acompanhamento.</p>
+                </div>
+                <span className="dashboard-risk-count">
                   {o.kpis.goalsAtRisk}
                 </span>
               </div>
+
               {o.lists.atRiskGoals.length === 0 ? (
-                <p className="empty-state">
-                  No goals are currently marked at risk.
-                </p>
+                <div className="dashboard-empty">
+                  <span className="dashboard-empty-icon" aria-hidden="true">✓</span>
+                  <div>
+                    <strong>Nenhum objectivo em risco</strong>
+                    <span>Todos os objectivos estão sem alerta de risco.</span>
+                  </div>
+                </div>
               ) : (
-                <div className="goal-list">
+                <div className="dashboard-goal-list">
                   {o.lists.atRiskGoals.map((g) => (
-                    <a href="/dashboard/goals" key={g.id} className="goal-row">
-                      <div className="goal-header">
-                        <span>{g.title}</span>
-                        <strong>{g.progress}%</strong>
+                    <a href="/dashboard/goals" key={g.id} className="dashboard-goal-item">
+                      <div className="dashboard-goal-header">
+                        <strong>{g.title}</strong>
+                        <span>{g.progress}%</span>
                       </div>
-                      <div className="progress-track">
-                        <span style={{ width: g.progress + "%" }} />
+
+                      <div className="dashboard-goal-progress" aria-hidden="true">
+                        <span style={{ width: `${Math.min(100, Math.max(0, g.progress))}%` }} />
                       </div>
-                      {g.target ? <small>{g.target}</small> : null}
-                      {g.deadline ? (
-                        <small>
-                          Deadline:{" "}
-                          <time dateTime={g.deadline}>{date(g.deadline)}</time>
-                        </small>
-                      ) : null}
+
+                      <div className="dashboard-goal-footer">
+                        {g.target ? <span>{g.target}</span> : <span>Sem meta definida</span>}
+                        {g.deadline ? (
+                          <time dateTime={g.deadline.toISOString()}>
+                            Prazo · {date(g.deadline)}
+                          </time>
+                        ) : (
+                          <span>Sem prazo</span>
+                        )}
+                      </div>
                     </a>
                   ))}
                 </div>
               )}
             </article>
-          </section>
-          <section className="ops-card">
-            <div className="card-header-row">
-              <h2>Recent activity</h2>
-              <span className="status-pill neutral">Latest records</span>
-            </div>
-            {o.lists.recentActivities.length === 0 ? (
-              <p className="empty-state">
-                No recent activity has been recorded.
-              </p>
-            ) : (
-              <ul className="activity-list">
-                {o.lists.recentActivities.map((a) => {
-                  const href = activityHref(a.entityType);
-                  const content = (
-                    <>
-                      <time dateTime={a.createdAt}>
-                        {date(a.createdAt, true)}
-                      </time>
-                      <p>
-                        {a.actorName ? <strong>{a.actorName}: </strong> : null}
-                        {a.text}
-                      </p>
-                    </>
-                  );
-
-                  return href ? (
-                    <li key={a.id}>
-                      <a href={href}>{content}</a>
-                    </li>
-                  ) : (
-                    <li key={a.id}>{content}</li>
-                  );
-                })}
-              </ul>
-            )}
           </section>
         </>
       ) : null}

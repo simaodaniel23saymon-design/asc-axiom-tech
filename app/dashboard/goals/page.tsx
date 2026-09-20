@@ -23,7 +23,7 @@ export default async function GoalsPage() {
   let errorMessage = "";
 
   try {
-    const requestHeaders = headers();
+    const requestHeaders = await headers();
     const protocol =
       requestHeaders.get("x-forwarded-proto") ?? "http";
     const host =

@@ -24,7 +24,7 @@ export default async function ProjectsPage() {
 
   try {
     // Reencaminha a sessão actual para que a API repita a autenticação e o RBAC no servidor.
-    const requestHeaders = headers();
+    const requestHeaders = await headers();
     const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
     const host =
       requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");

@@ -25,7 +25,7 @@ const goalResponse = {
 // Actualiza um objectivo e regista a operação no histórico.
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verifica a sessão e o role antes de permitir alterações internas.
@@ -40,8 +40,11 @@ export async function PUT(
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
+    // Em Next.js 15, params é assíncrono.
+    const { id } = await params;
+
     // Valida o identificador antes de o usar na consulta.
-    const idResult = z.uuid().safeParse(params.id);
+    const idResult = z.uuid().safeParse(id);
 
     if (!idResult.success) {
       return NextResponse.json(
@@ -129,7 +132,7 @@ export async function PUT(
 // Elimina um objectivo e regista a operação no histórico.
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Apenas administradores podem eliminar objectivos.
@@ -144,8 +147,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
+    // Em Next.js 15, params é assíncrono.
+    const { id } = await params;
+
     // Valida o identificador antes de o usar na consulta.
-    const idResult = z.uuid().safeParse(params.id);
+    const idResult = z.uuid().safeParse(id);
 
     if (!idResult.success) {
       return NextResponse.json(

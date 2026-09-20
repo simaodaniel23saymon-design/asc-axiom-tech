@@ -6,10 +6,16 @@ export const runtime = "edge";
 
 type TeamMember = {
   id: string;
+  userId: string | null;
   name: string;
   role: string;
   focus: string | null;
   active: boolean;
+  email: string | null;
+  systemRole: "admin" | "team" | "investor" | null;
+  userStatus: "active" | "inactive" | null;
+  profileCompleted: boolean | null;
+  mustChangePassword: boolean | null;
 };
 
 type TeamResponse = {
@@ -23,7 +29,7 @@ export default async function TeamPage() {
   let errorMessage = "";
 
   try {
-    const requestHeaders = headers();
+    const requestHeaders = await headers();
     const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
     const host =
       requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
@@ -65,6 +71,7 @@ export default async function TeamPage() {
       <TeamCrudClient
         teamMembers={teamMembers}
         canDelete={user.role === "admin"}
+        canManageUsers={user.role === "admin"}
         initialError={errorMessage}
       />
     </div>

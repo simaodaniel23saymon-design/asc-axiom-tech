@@ -11,5 +11,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/login");
   }
 
+  if (user.mustChangePassword || !user.profileCompleted) {
+    redirect("/account/setup");
+  }
+
   return <CommandCenterShell user={user}>{children}</CommandCenterShell>;
 }

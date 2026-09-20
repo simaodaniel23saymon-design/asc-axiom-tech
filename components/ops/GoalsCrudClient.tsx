@@ -40,11 +40,11 @@ const emptyForm = (): FormState => ({
 });
 
 const statusLabels: Record<GoalItem["status"], string> = {
-  not_started: "Not started",
-  in_progress: "In progress",
-  on_track: "On track",
-  at_risk: "At risk",
-  completed: "Completed",
+  not_started: "Não iniciado",
+  in_progress: "Em andamento",
+  on_track: "No caminho certo",
+  at_risk: "Em risco",
+  completed: "Concluído",
 };
 
 function formatDate(value: string | null) {
@@ -286,25 +286,26 @@ export default function GoalsCrudClient({
   const showForm = isCreating || editing !== null;
 
   return (
-    <section className="ops-card">
-      <div className="card-header-row">
-        <h2>Company goals</h2>
+    <section className="ops-card ops-goals">
+      <div className="ops-goals-header">
+        <div className="ops-goals-heading">
+          <h2>Objectivos</h2>
+          <p>Direcção estratégica e acompanhamento dos resultados.</p>
+        </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "center",
-          }}
-        >
-          <span className="status-pill neutral">Strategic</span>
+        <div className="ops-goals-header-actions">
+          <span className="ops-status planning">
+            <i className="fa-solid fa-bullseye" aria-hidden="true" />
+            Estratégico
+          </span>
 
           <button
             type="button"
-            className="btn-primary"
+            className="ops-primary-button"
             onClick={openCreate}
           >
-            Novo objectivo
+            <i className="fa-solid fa-plus" aria-hidden="true" />
+            <span>Novo objectivo</span>
           </button>
         </div>
       </div>
@@ -315,12 +316,23 @@ export default function GoalsCrudClient({
       {showForm ? (
         <form
           onSubmit={submit}
-          className="auth-form"
-          style={{ marginBottom: 22 }}
+          className="ops-goal-form"
         >
-          <h3>
-            {editing ? "Editar objectivo" : "Novo objectivo"}
-          </h3>
+          <div className="ops-goal-form-header">
+            <div>
+              <span className="eyebrow">
+                {editing ? "Actualizar" : "Novo registo"}
+              </span>
+              <h3>
+                {editing ? "Editar objectivo" : "Criar novo objectivo"}
+              </h3>
+            </div>
+
+            <span className="ops-status neutral">
+              <i className="fa-solid fa-bullseye" aria-hidden="true" />
+              Objectivo estratégico
+            </span>
+          </div>
 
           <label>
             <span>Título</span>
@@ -426,97 +438,164 @@ export default function GoalsCrudClient({
       ) : null}
 
       {!error && goals.length === 0 ? (
-        <p className="empty-state">
-          Ainda não existem objectivos.
-        </p>
+        <div className="ops-goal-empty">
+          <i className="fa-solid fa-bullseye" aria-hidden="true" />
+          <strong>Ainda não existem objectivos.</strong>
+          <p>Cria o primeiro objectivo estratégico para começar o acompanhamento.</p>
+        </div>
       ) : null}
 
       {goals.length > 0 ? (
-        <div className="goal-list expanded">
+        <div className="ops-goal-list">
           {goals.map((goal) => (
-            <div key={goal.id} className="goal-row">
-              <div className="goal-header">
-                <span>{goal.title}</span>
-                <strong>{goal.progress}%</strong>
+            <article key={goal.id} className="ops-goal-item">
+              <div className="ops-goal-main">
+                <div className="ops-goal-title-row">
+                  <div className="ops-goal-title-block">
+                    <h3>{goal.title}</h3>
+
+                    {goal.description ? (
+                      <p className="ops-goal-description">
+                        {goal.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="ops-goal-status-group">
+                    <span className={`ops-status ${goal.status}`}>
+                      {goal.status === "at_risk" ? (
+                        <i
+                          className="fa-solid fa-triangle-exclamation"
+                          aria-hidden="true"
+                        />
+                      ) : goal.status === "completed" ? (
+                        <i
+                          className="fa-solid fa-circle-check"
+                          aria-hidden="true"
+                        />
+                      ) : goal.status === "on_track" ? (
+                        <i
+                          className="fa-solid fa-arrow-trend-up"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <i
+                          className="fa-solid fa-circle"
+                          aria-hidden="true"
+                        />
+                      )}
+                      {statusLabels[goal.status]}
+                    </span>
+
+                    <strong className="ops-goal-progress-value">
+                      {goal.progress}%
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="ops-goal-progress">
+                  <div className="ops-progress-header">
+                    <span>Progresso</span>
+                    <strong>{goal.progress}%</strong>
+                  </div>
+
+                  <div
+                    className="ops-progress-track"
+                    role="progressbar"
+                    aria-valuenow={goal.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Progresso de ${goal.title}`}
+                  >
+                    <span
+                      className="ops-progress-fill"
+                      style={{ width: `${goal.progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="ops-goal-details">
+                  {goal.target ? (
+                    <span>
+                      <i
+                        className="fa-solid fa-bullseye"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <strong>Target:</strong> {goal.target}
+                      </span>
+                    </span>
+                  ) : null}
+
+                  {formatDate(goal.deadline) ? (
+                    <span
+                      className={
+                        goal.deadline &&
+                        new Date(goal.deadline).getTime() < Date.now() &&
+                        goal.status !== "completed"
+                          ? "is-overdue"
+                          : ""
+                      }
+                    >
+                      <i
+                        className="fa-solid fa-calendar-days"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <strong>Deadline:</strong>{" "}
+                        <time dateTime={goal.deadline ?? undefined}>
+                          {formatDate(goal.deadline)}
+                        </time>
+                      </span>
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
-              <div className="progress-track large">
-                <span
-                  style={{
-                    width: `${goal.progress}%`,
-                  }}
-                />
-              </div>
-
-              <span className="status-pill neutral">
-                {statusLabels[goal.status]}
-              </span>
-
-              {goal.description ? (
-                <small>{goal.description}</small>
-              ) : null}
-
-              {goal.target ? (
-                <small>{goal.target}</small>
-              ) : null}
-
-              {formatDate(goal.deadline) ? (
-                <small>
-                  Deadline:{" "}
-                  <time dateTime={goal.deadline ?? undefined}>
-                    {formatDate(goal.deadline)}
-                  </time>
-                </small>
-              ) : null}
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  marginTop: 10,
-                }}
-              >
+              <div className="ops-goal-actions">
                 <button
                   type="button"
-                  className="btn-ghost"
+                  className="ops-secondary-button"
                   onClick={() => openEdit(goal)}
                 >
-                  Editar
+                  <i className="fa-solid fa-pen" aria-hidden="true" />
+                  <span>Editar</span>
                 </button>
 
                 {canDelete ? (
                   <button
                     type="button"
-                    className="btn-ghost"
+                    className="ops-secondary-button"
                     onClick={() => {
                       setDeleting(goal);
                       setError(null);
                       setSuccess(null);
                     }}
                   >
-                    Eliminar
+                    <i className="fa-solid fa-trash" aria-hidden="true" />
+                    <span>Eliminar</span>
                   </button>
                 ) : null}
               </div>
-                {deleting?.id === goal.id ? (
-                <ConfirmDelete
-                message={
-                  "Eliminar “" +
-                  deleting.title +
-                  "” irá remover este objectivo e o respectivo registo do histórico permanecerá associado à operação."
-                  }
-                  isDeleting={isDeleting}
-              onCancel={() => setDeleting(null)}
-              onConfirm={removeGoal}
-              />
-            ) : null}
 
-            </div>
+              {deleting?.id === goal.id ? (
+                <div className="ops-goal-delete">
+                  <ConfirmDelete
+                    message={
+                      "Eliminar “" +
+                      deleting.title +
+                      "” irá remover este objectivo e o respectivo registo do histórico permanecerá associado à operação."
+                    }
+                    isDeleting={isDeleting}
+                    onCancel={() => setDeleting(null)}
+                    onConfirm={removeGoal}
+                  />
+                </div>
+              ) : null}
+            </article>
           ))}
         </div>
       ) : null}
-
     </section>
   );
 }

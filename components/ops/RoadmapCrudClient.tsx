@@ -38,16 +38,16 @@ const emptyForm = (): FormState => ({
 });
 
 const statusLabels: Record<RoadmapItem["status"], string> = {
-  planned: "Planned",
-  in_progress: "In progress",
-  review: "Review",
-  completed: "Completed",
+  planned: "Planeado",
+  in_progress: "Em andamento",
+  review: "Em revisão",
+  completed: "Concluído",
 };
 
 const priorityLabels: Record<RoadmapItem["priority"], string> = {
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
 };
 
 function formatDate(value: string | null) {
@@ -299,7 +299,7 @@ export default function RoadmapCrudClient({
             alignItems: "center",
           }}
         >
-          <span className="status-pill neutral">
+          <span className="ops-status neutral">
             Execution
           </span>
 
@@ -381,18 +381,10 @@ export default function RoadmapCrudClient({
                   )
                 }
               >
-                <option value="planned">
-                  Planned
-                </option>
-                <option value="in_progress">
-                  In progress
-                </option>
-                <option value="review">
-                  Review
-                </option>
-                <option value="completed">
-                  Completed
-                </option>
+                <option value="planned">Planeado</option>
+                <option value="in_progress">Em andamento</option>
+                <option value="review">Em revisão</option>
+                <option value="completed">Concluído</option>
               </select>
             </label>
 
@@ -407,15 +399,9 @@ export default function RoadmapCrudClient({
                   )
                 }
               >
-                <option value="high">
-                  High
-                </option>
-                <option value="medium">
-                  Medium
-                </option>
-                <option value="low">
-                  Low
-                </option>
+                <option value="high">Alta</option>
+                <option value="medium">Média</option>
+                <option value="low">Baixa</option>
               </select>
             </label>
 
@@ -436,7 +422,7 @@ export default function RoadmapCrudClient({
 
           <div className="grid-3">
             <label>
-              <span>Deadline</span>
+              <span>Prazo</span>
               <input
                 type="date"
                 value={form.deadline}
@@ -463,101 +449,78 @@ export default function RoadmapCrudClient({
       ) : null}
 
       {!initialError && roadmap.length === 0 ? (
-        <p className="empty-state">
+        <p className="ops-empty-state">
           Ainda não existem fases no roadmap.
         </p>
       ) : null}
 
       {roadmap.length > 0 ? (
-        <div className="timeline-list">
-          {roadmap.map((item) => (
+        <div className="ops-roadmap-list">
+          {roadmap.map((item, index) => (
             <div
               key={item.id}
-              className="timeline-item"
+              className="ops-roadmap-item"
             >
-              <div className="timeline-phase">
-                {item.phase}
+              <div className="ops-roadmap-phase">
+                Fase {String(index + 1).padStart(2, "0")}
               </div>
 
-              <div style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      "space-between",
-                    gap: 16,
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
+              <div className="ops-roadmap-content">
+                <div className="ops-roadmap-header">
+                  <div className="ops-roadmap-title">
                     <strong>{item.title}</strong>
 
-                    <div className="stack-meta">
-                      <span className="status-pill neutral">
+                    <div className="ops-roadmap-meta">
+                      <span className="ops-status neutral">
                         {statusLabels[item.status]}
                       </span>
 
                       <span
-                        className={`priority-badge ${item.priority}`}
+                        className={`ops-status ${item.priority}`}
                       >
                         {priorityLabels[item.priority]}
                       </span>
 
-                      {item.description ? (
-                        <small>
-                          {item.description}
-                        </small>
-                      ) : null}
-
-                      {formatDate(
-                        item.startDate,
-                      ) ? (
-                        <small>
-                          Início:{" "}
+                      {formatDate(item.startDate) ? (
+                        <span className="ops-roadmap-date">
+                          <span>Início</span>
                           <time
                             dateTime={
                               item.startDate ??
                               undefined
                             }
                           >
-                            {formatDate(
-                              item.startDate,
-                            )}
+                            {formatDate(item.startDate)}
                           </time>
-                        </small>
+                        </span>
                       ) : null}
 
-                      {formatDate(
-                        item.deadline,
-                      ) ? (
-                        <small>
-                          Deadline:{" "}
+                      {formatDate(item.deadline) ? (
+                        <span className="ops-roadmap-date">
+                          <span>Prazo</span>
                           <time
                             dateTime={
                               item.deadline ??
                               undefined
                             }
                           >
-                            {formatDate(
-                              item.deadline,
-                            )}
+                            {formatDate(item.deadline)}
                           </time>
-                        </small>
+                        </span>
                       ) : null}
                     </div>
+
+                    {item.description ? (
+                      <p className="ops-roadmap-description">
+                        {item.description}
+                      </p>
+                    ) : null}
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      flexWrap: "wrap",
-                    }}
-                  >
+                  <div className="ops-roadmap-actions">
                     <button
                       type="button"
-                      className="btn-ghost"
+                      className="btn-secondary"
                       onClick={() =>
                         openEdit(item)
                       }
@@ -568,7 +531,7 @@ export default function RoadmapCrudClient({
                     {canDelete ? (
                       <button
                         type="button"
-                        className="btn-ghost"
+                        className="btn-secondary"
                         onClick={() => {
                           setDeleting(item);
                           setError(null);

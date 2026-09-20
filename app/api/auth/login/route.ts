@@ -28,9 +28,19 @@ export async function POST(request: Request) {
   }
 
   const session = await createSession(user);
-  await recordAuthActivity(user.id, "login", "User signed in.");
 
-  const response = NextResponse.json({ ok: true, redirectTo: "/dashboard" });
+  try {
+    await recordAuthActivity(user.id, "login", "User signed in.");
+  } catch (error) {
+    console.error("Failed to record login activity:", error);
+  }
+
+  const redirectTo =
+    user.mustChangePassword || !user.profileCompleted
+      ? "/account/setup"
+      : "/dashboard";
+
+  const response = NextResponse.json({ ok: true, redirectTo });
   response.cookies.set("asc_ops_session", session.token, sessionCookieOptions(session.expiresAt));
 
   return response;

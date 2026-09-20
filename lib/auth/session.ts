@@ -11,6 +11,8 @@ export type SessionUser = {
   email: string;
   name: string;
   role: "admin" | "team" | "investor";
+  mustChangePassword: boolean;
+  profileCompleted: boolean;
 };
 
 function toBase64Url(value: Uint8Array) {
@@ -44,13 +46,20 @@ export async function createSession(user: SessionUser) {
 }
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const token = cookies().get(COOKIE_NAME)?.value;
+  const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
 
   const tokenHash = await hashToken(token);
   const db = getDb();
   const rows = await db
-    .select({ id: users.id, email: users.email, name: users.name, role: users.role })
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+      mustChangePassword: users.mustChangePassword,
+      profileCompleted: users.profileCompleted,
+    })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
     .where(and(eq(sessions.tokenHash, tokenHash), gt(sessions.expiresAt, new Date()), eq(users.status, "active")))
@@ -60,7 +69,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 }
 
 export async function revokeCurrentSession() {
-  const token = cookies().get(COOKIE_NAME)?.value;
+  const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return;
 
   const db = getDb();

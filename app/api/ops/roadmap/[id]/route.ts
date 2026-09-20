@@ -25,9 +25,11 @@ const roadmapResponse = {
 // Actualiza uma fase do roadmap e regista a operação no histórico.
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     // Verifica a sessão e o role antes de permitir alterações internas.
     const user = await getCurrentUser();
     const authorizationError = authorizeApi(user, ["admin", "team"]);
@@ -41,7 +43,7 @@ export async function PUT(
     }
 
     // Valida o identificador antes de o usar na consulta.
-    const idResult = z.uuid().safeParse(params.id);
+    const idResult = z.uuid().safeParse(id);
 
     if (!idResult.success) {
       return NextResponse.json(
@@ -112,9 +114,11 @@ export async function PUT(
 // Elimina uma fase do roadmap e regista a operação no histórico.
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     // Apenas administradores podem eliminar fases do roadmap.
     const user = await getCurrentUser();
     const authorizationError = authorizeApi(user, ["admin"]);
@@ -128,7 +132,7 @@ export async function DELETE(
     }
 
     // Valida o identificador antes de o usar na consulta.
-    const idResult = z.uuid().safeParse(params.id);
+    const idResult = z.uuid().safeParse(id);
 
     if (!idResult.success) {
       return NextResponse.json(

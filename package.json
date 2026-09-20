@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS='--dns-result-order=ipv4first' next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -18,7 +18,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@react-email/render": "^2.0.8",
     "drizzle-orm": "^0.45.2",
-    "next": "^14.2.29",
+    "next": "^15.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^6.12.4",

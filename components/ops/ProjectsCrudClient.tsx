@@ -44,17 +44,17 @@ const emptyForm = (): FormState => ({
   deadline: "",
 });
 const statusLabels: Record<ProjectItem["status"], string> = {
-  planning: "Planning",
-  in_progress: "In progress",
-  review: "Review",
-  live: "Live",
-  completed: "Completed",
-  blocked: "Blocked",
+  planning: "Planeamento",
+  in_progress: "Em andamento",
+  review: "Em revisão",
+  live: "Em produção",
+  completed: "Concluído",
+  blocked: "Bloqueado",
 };
 const priorityLabels: Record<ProjectItem["priority"], string> = {
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
 };
 function formatDate(value: string | null) {
   if (!value) return null;
@@ -236,25 +236,34 @@ export default function ProjectsCrudClient({
   }
   const showForm = isCreating || editing !== null;
   return (
-    <section className="ops-card">
-      <div className="card-header-row">
-        <h2>Projects</h2>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span className="status-pill neutral">Portfolio</span>
-          <button type="button" className="btn-primary" onClick={openCreate}>
-            Novo projecto
+    <section className="ops-card ops-projects">
+      <div className="ops-projects-header">
+        <div className="ops-projects-heading">
+          <h2>Projectos</h2>
+          <p>Gestão operacional do portefólio de projectos.</p>
+        </div>
+
+        <div className="ops-projects-header-actions">
+          <span className="ops-status neutral">
+            <i className="fa-solid fa-layer-group" aria-hidden="true" />
+            Portefólio
+          </span>
+
+          <button
+            type="button"
+            className="ops-primary-button"
+            onClick={openCreate}
+          >
+            <i className="fa-solid fa-plus" aria-hidden="true" />
+            <span>Novo projecto</span>
           </button>
         </div>
       </div>
       <FormFeedback message={error} />
       <FormFeedback message={success} tone="success" />
       {showForm ? (
-        <form
-          onSubmit={submit}
-          className="auth-form"
-          style={{ marginBottom: 22 }}
-        >
-          <h3>{editing ? "Editar projecto" : "Novo projecto"}</h3>
+        <form onSubmit={submit} className="ops-project-form">
+          <h3>{editing ? "Editar projecto" : "Criar novo projecto"}</h3>
           <label>
             <span>Nome</span>
             <input
@@ -355,83 +364,154 @@ export default function ProjectsCrudClient({
         </form>
       ) : null}
       {projects.length === 0 ? (
-        <p className="empty-state">Ainda não existem projectos.</p>
+        <div className="ops-project-empty">
+          <i className="fa-solid fa-folder-open" aria-hidden="true" />
+          <p>Ainda não existem projectos.</p>
+        </div>
       ) : (
-        <div className="stack-list">
+        <div className="ops-project-list">
           {projects.map((project) => (
-            <div key={project.id} className="stack-item">
-              <div>
-                <strong>{project.name}</strong>
-                {project.ownerLabel ? (
-                  <small>{project.ownerLabel}</small>
-                ) : null}
-                {project.description ? (
-                  <small>{project.description}</small>
-                ) : null}
-              </div>
-              <div className="stack-meta">
-                <span className="status-pill neutral">
-                  {statusLabels[project.status]}
-                </span>
-                <span className={"priority-badge " + project.priority}>
-                  {priorityLabels[project.priority]}
-                </span>
-                {formatDate(project.startDate) ? (
-                  <small>
-                    Início:{" "}
-                    <time dateTime={project.startDate ?? undefined}>
-                      {formatDate(project.startDate)}
-                    </time>
-                  </small>
-                ) : null}
-                {formatDate(project.deadline) ? (
-                  <small>
-                    Deadline:{" "}
-                    <time dateTime={project.deadline ?? undefined}>
-                      {formatDate(project.deadline)}
-                    </time>
-                  </small>
-                ) : null}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => openEdit(project)}
+            <article key={project.id} className="ops-project-item">
+              <div className="ops-project-main">
+                <div className="ops-project-title-row">
+                  <div>
+                    <h3 className="ops-project-title">{project.name}</h3>
+
+                    {project.description ? (
+                      <p className="ops-project-description">
+                        {project.description}
+                      </p>
+                    ) : null}
+
+                    {project.ownerLabel ? (
+                      <span className="ops-project-owner">
+                        <i
+                          className="fa-solid fa-user"
+                          aria-hidden="true"
+                        />
+                        {project.ownerLabel}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="ops-project-meta">
+                    <span className={`ops-status ${project.status}`}>
+                      {statusLabels[project.status]}
+                    </span>
+
+                    <span className={`priority-badge ${project.priority}`}>
+                      {priorityLabels[project.priority]}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="ops-project-progress">
+                  <div className="ops-progress-header">
+                    <span>Progresso</span>
+                    <strong>{project.progress}%</strong>
+                  </div>
+
+                  <div
+                    className="ops-progress-track"
+                    role="progressbar"
+                    aria-valuenow={project.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Progresso de ${project.name}`}
                   >
-                    Editar
-                  </button>
-                  {canDelete ? (
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      onClick={() => {
-                        setDeleting(project);
-                        setError(null);
-                        setSuccess(null);
-                      }}
+                    <span
+                      className="ops-progress-fill"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="ops-project-info">
+                  {formatDate(project.startDate) ? (
+                    <span className="ops-project-date">
+                      <i
+                        className="fa-solid fa-calendar-days"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        Início:{" "}
+                        <time dateTime={project.startDate ?? undefined}>
+                          {formatDate(project.startDate)}
+                        </time>
+                      </span>
+                    </span>
+                  ) : null}
+
+                  {formatDate(project.deadline) ? (
+                    <span
+                      className={
+                        project.deadline &&
+                        new Date(project.deadline).getTime() < Date.now() &&
+                        project.status !== "completed" &&
+                        project.status !== "live"
+                          ? "ops-project-date overdue"
+                          : "ops-project-date"
+                      }
                     >
-                      Eliminar
-                    </button>
+                      <i
+                        className="fa-solid fa-calendar-xmark"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        Deadline:{" "}
+                        <time dateTime={project.deadline ?? undefined}>
+                          {formatDate(project.deadline)}
+                        </time>
+                      </span>
+                    </span>
                   ) : null}
                 </div>
-                  {deleting?.id === project.id ? (
+              </div>
+
+              <div className="ops-project-actions">
+                <button
+                  type="button"
+                  className="ops-secondary-button"
+                  onClick={() => openEdit(project)}
+                >
+                  <i className="fa-solid fa-pen" aria-hidden="true" />
+                  <span>Editar</span>
+                </button>
+
+                {canDelete ? (
+                  <button
+                    type="button"
+                    className="ops-secondary-button"
+                    onClick={() => {
+                      setDeleting(project);
+                      setError(null);
+                      setSuccess(null);
+                    }}
+                  >
+                    <i className="fa-solid fa-trash" aria-hidden="true" />
+                    <span>Eliminar</span>
+                  </button>
+                ) : null}
+              </div>
+
+              {deleting?.id === project.id ? (
+                <div className="ops-project-delete">
                   <ConfirmDelete
                     message={
-                    "Eliminar “" +
-                    deleting.name +
-                    "” irá remover este projecto. Os milestones associados serão eliminados e as tasks ficarão sem projecto."
+                      "Eliminar “" +
+                      deleting.name +
+                      "” irá remover este projecto. Os milestones associados serão eliminados e as tasks ficarão sem projecto."
                     }
                     isDeleting={isDeleting}
                     onCancel={() => setDeleting(null)}
                     onConfirm={removeProject}
-                    />
-                  ) : null}
-              </div>
-            </div>
+                  />
+                </div>
+              ) : null}
+            </article>
           ))}
         </div>
       )}
-      
     </section>
   );
 }

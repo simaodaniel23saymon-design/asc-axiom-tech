@@ -8,13 +8,18 @@ export default function FormActions({
   onCancel: () => void;
 }) {
   return (
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      <button type="submit" className="btn-primary" disabled={isSubmitting}>
-        {submitLabel}
+    <div className="ops-form-actions">
+      <button
+        type="submit"
+        className="btn-primary"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "A guardar…" : submitLabel}
       </button>
+
       <button
         type="button"
-        className="btn-ghost"
+        className="btn-secondary"
         onClick={onCancel}
         disabled={isSubmitting}
       >

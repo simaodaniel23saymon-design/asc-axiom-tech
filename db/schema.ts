@@ -74,6 +74,8 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: userRoleEnum("role").notNull().default("team"),
   status: userStatusEnum("status").notNull().default("active"),
+  mustChangePassword: boolean("must_change_password").notNull().default(true),
+  profileCompleted: boolean("profile_completed").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
