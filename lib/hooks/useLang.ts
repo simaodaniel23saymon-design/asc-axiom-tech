@@ -7,7 +7,7 @@ export function useLang() {
 
   useEffect(() => {
     const saved = localStorage.getItem("asc_lang") as Lang | null;
-    const nextLang = saved && ["pt","en","es"].includes(saved) ? saved : "pt";
+    const nextLang = saved && ["pt", "en", "es", "fr"].includes(saved) ? saved : "pt";
     setLang(nextLang);
     document.documentElement.lang = nextLang;
   }, []);

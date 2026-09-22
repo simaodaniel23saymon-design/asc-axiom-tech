@@ -4,33 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--dns-result-order=ipv4first' next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:seed": "node scripts/seed.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",
-    "@neondatabase/serverless": "^1.1.0",
     "@react-email/render": "^2.0.8",
-    "drizzle-orm": "^0.45.2",
-    "next": "^15.5.2",
+    "next": "^14.2.29",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "resend": "^6.12.4",
-    "zod": "^4.6.5"
+    "resend": "^6.12.4"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.13.16",
-    "@cloudflare/workers-types": "^5.20260908.1",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "drizzle-kit": "^0.31.10",
     "typescript": "^5.4.5"
   }
 }
