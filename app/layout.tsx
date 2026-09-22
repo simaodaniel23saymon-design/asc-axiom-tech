@@ -21,6 +21,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-AO">
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7992581885872919"
+          crossOrigin="anonymous"
+        ></script>
+      </head>
       <body>
         <div className="ambient-wrap" aria-hidden="true">
           <div className="ambient-orbit" />
